@@ -148,14 +148,20 @@ dies to bots.
 
 ## 🚀 Deploy
 
-Client is static (`public/`); the WS server needs a host.
+Client is static (`public/`); the WS server needs a host. Free-tier setup, fully
+walked through in **`docs/PUBLISHING.md`**:
 
-- **Render.com** (free): `render.yaml` blueprint — Node web service, rootDir `server/`.
-- **Netlify**: build `node scripts/build.js` (injects `CANOE_SERVER` env), publish `public/`.
-- Set `CANOE_SERVER` to your Render WS URL (e.g. `wss://your-app.onrender.com`); empty =
-  same-origin (local/LAN play).
+- **Render.com** (free): `render.yaml` blueprint — Node web service serving both the
+  static client and the `/ws` WebSocket. Repo is pushed to GitHub
+  (`scottramos09/canoe-battler`, private).
+- **Netlify** (free): build `node scripts/build.js` (injects `CANOE_SERVER` env),
+  publish `public/`. Set `CANOE_SERVER` to the Render host (no scheme/port).
+- **UptimeRobot** (free): 5-min HTTP ping keeps the Render instance from sleeping.
+- Client connection: `CANOE_SERVER` non-empty → `wss://<host>/ws`; empty → same-origin
+  (localhost / LAN play).
 - LAN: `npm start`, friends join at `http://YOUR-IP:3000`.
-- **Not yet deployed** — blueprints exist, never executed.
+- **Status:** code pushed to GitHub; Render/Netlify deploys pending (walkthrough in
+  `docs/PUBLISHING.md`).
 
 ## 📊 Performance
 

@@ -561,6 +561,18 @@ cd /c/Users/Scott/canoe-battler && timeout 340 npm test
   spawning is now wall-clock scheduled (`time >= pv.nextWakeAt`) — the frame-counted
   `wakeT -= 1/60` collapsed at low headless fps and killed the icon stream. Suite
   green (run85, 106 checks). ?v=83.
+- **Publishing round** — repo initialized + pushed to GitHub (`scottramos09/canoe-battler`,
+  private; `gh` CLI authed as scottramos09). Deploy scaffolding verified: `render.yaml`
+  blueprint (Node web service, free plan, `npm install --omit=dev` → `node server/server.js`,
+  ALLOW_ADMIN=1 for /admin/reset), `netlify.toml` (build `node scripts/build.js`, publish
+  `public/`, CANOE_SERVER env), `scripts/build.js` injects the server host into
+  `server-config.js` (verified: env set → host injected; empty → same-origin). Client
+  connection logic: `CANOE_SERVER || location.host` → `wss://host/ws` on https. Added
+  `.gitignore` (node_modules/shots/perf.log), `engines.node >=18`, bumped
+  server-config.js to ?v=52. **`docs/PUBLISHING.md` = the full free-tier walkthrough**
+  (Render blueprint → Netlify env → UptimeRobot keep-alive → smoke test → friend link +
+  lobby flow, troubleshooting, limits). NOTE: one shared lobby per server instance —
+  two simultaneous friend groups need a second blueprint instance + second site.
 - Razorfin: hp 140, spd 13.5, rails spd 46–64 (pierce), mines/torps, GATLING BURST cd 6.
 - Rocket: hp 180, spd 11, rockets cd 1.05 (MISSILE RAIN cd 10), shotgun tiers, CLUSTER HELL
   split.
