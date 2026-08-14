@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CANOE ARENA — Box Geometry Battler</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛶</text></svg>">
+<link rel="stylesheet" href="/css/style.css?v=54">
+<script src="/js/server-config.js?v=52"></script>
+<script src="/vendor/tjab-bridge.js?v=51"></script>
+<script type="importmap">{"imports":{"three":"/vendor/three.module.js?v=51","three/examples/jsm/postprocessing/EffectComposer.js":"/vendor/postprocessing/EffectComposer.js","three/examples/jsm/postprocessing/RenderPass.js":"/vendor/postprocessing/RenderPass.js","three/examples/jsm/postprocessing/UnrealBloomPass.js":"/vendor/postprocessing/UnrealBloomPass.js","three/examples/jsm/postprocessing/OutputPass.js":"/vendor/postprocessing/OutputPass.js"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+<div id="veil"></div>
+
+<div id="ui">
+  <div id="connecting" class="screen"><div class="panel"><h1 class="title">🛶 CANOE ARENA</h1><p class="sub">box-geometry naval combat</p><div class="spinner"></div><p id="connMsg">Connecting to the lagoon…</p></div></div>
+
+  <!-- ============ LOGIN SCREEN — persistent profiles, shown before the title ============ -->
+  <div id="login" class="screen">
+    <div class="panel">
+      <h1 class="title">🛶 CANOE ARENA</h1>
+      <p class="sub">log in to your profile</p>
+      <div class="col" style="margin-top:18px">
+        <input id="loginUser" maxlength="16" placeholder="Username" style="margin-bottom:10px">
+        <input id="loginPass" type="password" maxlength="32" placeholder="Password" style="margin-bottom:12px">
+        <div id="loginErr" class="hint" style="color:#ff5e4d;min-height:16px"></div>
+        <button id="btnLogin" class="btn start">LOGIN</button>
+        <p class="hint" style="text-align:center;margin-top:12px">test profile — username: test · password: test</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MENU: TITLE VIEW → LOBBY VIEW (main window + attached dock tabs) ============ -->
+  <div id="menu" class="screen hidden">
+
+    <div id="menuRow">
+      <!-- LEFT EXTENSION: host-only game settings — starts collapsed to a labeled tab -->
+      <div id="hostPanel" class="dock dock-left hidden">
+        <button class="dock-tab" id="hostPanelHead"><span class="dock-label">GAME SETTINGS</span><span class="dock-arrow">▸</span></button>
+        <div class="dock-body" id="hostPanelBody">
+          <div class="frow"><div class="flabel">MODE</div><div id="modeBtns"></div></div>
+          <div class="frow"><div class="flabel">MAP</div><div id="mapBtns"></div></div>
+          <div class="frow"><div class="flabel">ADD BOTS?</div>
+            <div class="row" style="gap:6px">
+              <button id="botsOnYes" class="btn small on">YES</button>
+              <button id="botsOnNo" class="btn small">NO</button>
+            </div>
+          </div>
+          <div class="frow" id="botsRow">
+            <div class="flabel">BOTS</div>
+            <div class="row" style="gap:10px">
+              <button id="botMinus" class="btn small">−</button>
+              <div id="botCount" class="statbox">6</div>
+              <button id="botPlus" class="btn small">+</button>
+            </div>
+          </div>
+          <div class="frow"><div class="flabel">BOT DIFFICULTY</div><div id="diffBtns"></div></div>
+        </div>
+      </div>
+
+      <!-- CENTER COLUMN: the main lobby window + the bottom style extension -->
+      <div id="menuCol">
+        <div class="panel center-panel">
+          <h1 class="title">CANOE <span>ARENA</span></h1>
+          <p class="sub">box-geometry naval combat · last boat floating wins</p>
+
+          <!-- TITLE VIEW — pick how to enter (online-prep title screen) -->
+          <div id="titleView">
+            <div class="title-btns">
+              <button class="btn start" id="btnCreate">CREATE LOBBY</button>
+              <button class="btn start" id="btnJoin">JOIN LOBBY</button>
+              <button class="btn start" id="btnPractice">PRACTICE</button>
+              <button class="btn start off" id="btnShopTitle" disabled>SHOP — COMING SOON</button>
+            </div>
+            <div class="row" style="justify-content:center;margin-top:14px">
+              <input id="inpName" maxlength="14" placeholder="Your name" style="max-width:230px">
+              <div class="lvlbox"><b id="lvlNum">1</b><span>LVL</span></div>
+              <button class="btn small" id="btnLogout">LOG OUT</button>
+            </div>
+            <div id="xpbar"><div id="xpfill"></div></div>
+            <p class="hint" style="text-align:center;margin-top:10px">Create = host a lobby · Join = hop in an open lobby · Practice = solo warm-up</p>
+          </div>
+
+          <!-- LOBBY VIEW — after joining -->
+          <div id="lobbyCol" class="hidden">
+            <div id="practiceBanner" class="hidden">PRACTICE LOBBY</div>
+            <div class="flabel weaponPrompt" id="weaponPrompt">CHOOSE YOUR WEAPON</div>
+            <div id="classCards"></div>
+            <div class="flabel" style="margin-top:12px">CREW</div>
+            <div id="playerList" class="plist"></div>
+            <div class="row lobby-actions">
+              <button id="btnStyle" class="btn">STYLE &amp; COSMETICS</button>
+              <button id="btnMenu" class="btn">RETURN TO MAIN MENU</button>
+            </div>
+            <button id="btnStart" class="btn start full">START MATCH</button>
+            <div id="hostHint" class="hint hidden" style="text-align:center">Only the host (first player) can launch</div>
+          </div>
+
+          <!-- legacy tabpanes kept hidden — id contracts for ui.js/gamepad nav -->
+          <div class="tabpane hidden" id="tab-play"></div>
+          <div class="tabpane hidden" id="tab-style"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT EXTENSION: lobby chat — starts collapsed to a labeled tab -->
+      <div id="chatPanel" class="dock dock-right hidden">
+        <button class="dock-tab" id="chatHead"><span class="dock-label">LOBBY CHAT</span><span class="dock-arrow">◂</span></button>
+        <div class="dock-body" id="chatBody">
+          <div id="chatMsgs"></div>
+          <div class="row" style="gap:6px;margin-top:8px">
+            <input id="chatInput" maxlength="140" placeholder="Say something…">
+            <button class="btn small" id="chatSend">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden">
+    <div id="hudTop">
+      <div id="hpWrap">
+        <div id="hpFill"></div>
+        <div id="shFill"></div>
+        <span id="hpText"></span>
+      </div>
+    </div>
+    <!-- bottom-center control panel: stats row, shortcuts (fire/special/boost), toggles -->
+    <div id="leftPanel">
+      <div class="lp-row">
+        <div class="lp-stat"><div class="lp-sec">SCORE</div><div class="lp-box" id="scoreVal">0</div></div>
+        <div class="lp-stat"><div class="lp-sec">KILLS</div><div class="lp-box" id="killsVal">0</div></div>
+        <div class="lp-stat"><div class="lp-sec">WEAPON</div><div class="lp-box" id="wlevelVal">Level 0</div></div>
+      </div>
+      <div class="lp-sec">SHORTCUTS</div>
+      <div class="lp-row">
+        <button class="lp-combat" id="btnFire" title="Primary weapon">
+          <span class="k">LMB</span><span class="lbl">FIRE1</span>
+        </button>
+        <button class="lp-combat" id="abilityBtn" title="Special ability">
+          <span class="k">RMB</span>
+          <span id="abilityCdOverlay"></span>
+          <span id="abilityCdText"></span>
+          <span class="lbl">FIRE2</span>
+        </button>
+        <button class="lp-combat" id="btnBoost" title="Boost">
+          <span class="k">SHIFT</span>
+          <span id="boostCdOverlay"></span>
+          <span id="boostCdText"></span>
+          <span class="lbl">BOOST</span>
+        </button>
+      </div>
+      <div class="lp-sec">TOGGLES</div>
+      <div class="lp-row">
+        <button class="lp-combat" id="btnMuteT">MUTE</button>
+        <button class="lp-combat" id="btnScoresT">SCORES (TAB)</button>
+      </div>
+    </div>
+    <div id="hudTopRight">
+      <div id="modeName"></div>
+      <div id="timer" class="big"></div>
+      <div id="scoreCap"></div>
+      <div id="leaderLine"></div>
+    </div>
+    <div id="killfeed"></div>
+    <div id="crosshair"></div>
+    <div id="hitmarker"></div>
+    <div id="msgs"></div>
+  </div>
+
+  <!-- ============ PAUSE / EXIT ============ -->
+  <div id="pause" class="screen hidden">
+    <div class="panel" style="min-width:320px">
+      <h2 class="title" style="font-size:26px">⏸ PAUSED</h2>
+      <p class="sub">the match continues while you're away</p>
+      <button id="btnResume" class="btn start">▶ RESUME</button>
+      <button id="btnQuit" class="btn">🚪 RETURN TO TITLE</button>
+      <button id="btnMute" class="btn">🔊 MUTE</button>
+    </div>
+  </div>
+
+  <!-- ============ SHOP ============ -->
+  <div id="shop" class="screen hidden">
+    <div class="panel wide">
+      <div class="row" style="justify-content:space-between">
+        <h2 class="title small">🔧 SCRAP SHOP <span id="shopCreds"></span></h2>
+        <button class="btn small" id="btnShopClose">✕ close (B)</button>
+      </div>
+      <div id="shopBody" class="shop-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============ SCOREBOARD ============ -->
+  <div id="scoreboard" class="screen hidden">
+    <div class="panel">
+      <h2 class="title small">SCOREBOARD</h2>
+      <table id="sbTable"></table>
+    </div>
+  </div>
+
+  <!-- ============ COUNTDOWN / DEATH / END ============ -->
+  <div id="countdown" class="hidden"><div id="countTxt">3</div><div id="countSub">GET READY</div></div>
+  <div id="death" class="screen hidden">
+    <div class="panel small-panel">
+      <h2 class="title">💀 YOU SANK</h2>
+      <p id="deathTxt">Respawn in 3…</p>
+    </div>
+  </div>
+  <div id="end" class="screen hidden">
+    <div class="panel wide">
+      <h1 class="title" id="endTitle">🏆 MATCH OVER</h1>
+      <div id="endResults"></div>
+      <div id="xpGain" class="hint"></div>
+      <div id="unlockBox"></div>
+      <div class="row" style="justify-content:center;gap:12px;margin-top:14px">
+        <button class="btn" id="btnAgain">↻ BACK TO LOBBY</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="upgPopup" class="hidden">
+    <div class="upg-kill">☠ KILL!</div>
+    <div class="upg-line">⬆ WEAPON UPGRADED</div>
+    <div class="upg-weapon"></div>
+  </div>
+  <div id="spectateBar" class="hidden">👁 Spectating: <b id="specName"></b> <span class="hint">— [N]/[M] next</span></div>
+  <!-- hover preview popup: short clip of the canoe firing its gun + stat card -->
+  <div id="previewPop" class="hidden">
+    <canvas id="previewCv" width="360" height="230"></canvas>
+    <div id="previewName"></div>
+    <div id="previewStats">
+      <div class="pstat"><span class="ps-label">WPN DMG:</span><span class="ps-val" id="statDmg">—</span></div>
+      <div class="pstat"><span class="ps-label">WPN SPD:</span><span class="ps-val" id="statSpd">—</span></div>
+      <div class="pstat"><span class="ps-label">CANOE SPEED:</span><span class="ps-val" id="statCanoe">—</span></div>
+    </div>
+  </div>
+
+  <!-- ============ STYLE & COSMETICS OVERLAY (over the lobby window) ============ -->
+  <div id="cosmOverlay" class="screen hidden">
+    <div class="panel wide cosm-panel">
+      <h2 class="title small">STYLE &amp; COSMETICS</h2>
+      <div class="cosm-main">
+        <div id="cosmWrap"></div>
+        <div class="cosm-preview">
+          <canvas id="cosmCv" width="360" height="230"></canvas>
+          <div class="hint" id="cosmPreviewHint">Hover a style to preview it on your canoe</div>
+        </div>
+      </div>
+      <div class="row cos-actions">
+        <button id="btnCosmCancel" class="btn">CANCEL</button>
+        <button id="btnCosmApply" class="btn start cos-apply">APPLY</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/js/main.js?v=83"></script>
+</body>
+</html>

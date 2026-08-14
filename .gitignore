@@ -1,0 +1,14 @@
+# dependencies / build output
+node_modules/
+
+# runtime junk (local dev artifacts — never ship)
+perf.log
+shots/
+.scratch/
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+reference/BoatPhysics3D/

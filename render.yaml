@@ -1,0 +1,20 @@
+# CANOE ARENA — multiplayer game server on Render.com (free tier)
+# 1) Push this repo to GitHub.
+# 2) On render.com: New + Blueprint (or New Web Service) -> pick the repo.
+# 3) Render auto-detects render.yaml. The service starts on :3000.
+# 4) Deploy the static client on Netlify with env CANOE_SERVER=<render-host>.
+services:
+  - type: web
+    name: canoe-arena-server
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server/server.js
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 3000
+      # Optional admin controls (hard-reset the lobby if a test gets stuck):
+      # POST https://<host>/admin/reset — leave OUT for public-facing deploys.
+      - key: ALLOW_ADMIN
+        value: "1"

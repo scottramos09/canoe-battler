@@ -1,0 +1,15 @@
+# CANOE ARENA — Netlify deployment config
+# The game client is fully static (public/). The multiplayer server is a
+# Node+WebSocket process that MUST run elsewhere (see render.yaml for a
+# free Render.com setup). Point the client at it via the CANOE_SERVER env var.
+[build]
+  command = "node scripts/build.js"
+  publish = "public"
+
+[build.environment]
+  CANOE_SERVER = ""
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
