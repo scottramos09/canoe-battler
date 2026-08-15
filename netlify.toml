@@ -6,8 +6,10 @@
   command = "node scripts/build.js"
   publish = "public"
 
+# The game-server host injected into the client at BUILD time by
+# scripts/build.js. Point at your Render service (host only — no scheme/port).
 [build.environment]
-  CANOE_SERVER = ""
+  CANOE_SERVER = "canoe-arena-server.onrender.com"
 
 [[redirects]]
   from = "/*"
