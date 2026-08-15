@@ -171,9 +171,11 @@ const CLASSES = {
 };
 
 const MODES = {
-  ffa: { id: 'ffa', name: 'FFA', icon: '🏆', time: 480, scoreCap: 2000, respawn: 3, zone: null },
+  ffa: { id: 'ffa', name: 'FFA', icon: '🏆', time: 480, scoreCap: 2000, respawn: 3, zone: null,
+    desc: 'Free-for-all — every canoe for itself. Sink enemies to score; first to 2000 points wins.' },
   koth: { id: 'koth', name: 'King of the Hill', icon: '👑', time: 300, scoreCap: 0, respawn: 3,
-    zone: { x: 0, z: 0, r: 22, rate: 8 } },
+    zone: { x: 0, z: 0, r: 22, rate: 8 },
+    desc: 'King of the Hill — hold the glowing zone to earn points. Highest score when the timer runs out wins.' },
 };
 
 // ramps: axis-aligned launch ramps. dir: 'x'|'z', sign: +1 = uphill toward +axis.

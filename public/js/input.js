@@ -16,9 +16,15 @@ const raycaster = new THREE.Raycaster();
 const hit = new THREE.Vector3();
 let cam = null, dom = null;
 
+// typing in a form field must never drive the game: skip ALL game key
+// handling while an input/textarea is focused (Tab moves between the login
+// fields instead of opening the scoreboard, W doesn't steer while chatting…)
+const typing = (e) => e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+
 export function initInput(camera, domEl) {
   cam = camera; dom = domEl;
   window.addEventListener('keydown', (e) => {
+    if (typing(e)) return;
     if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();
     if (e.repeat) return;
     keys.add(e.code);
@@ -28,7 +34,7 @@ export function initInput(camera, domEl) {
   });
   window.addEventListener('keyup', (e) => {
     keys.delete(e.code);
-    if (e.code === 'Tab') onScoreboard(false);
+    if (e.code === 'Tab' && !typing(e)) onScoreboard(false);
   });
   window.addEventListener('blur', () => keys.clear());
   window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; actDev = 'kbm'; actIdle = 0; });

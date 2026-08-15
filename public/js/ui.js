@@ -123,6 +123,7 @@ export function initUI(actions) {
       const b = document.createElement('button');
       b.className = 'btn modebtn' + (m.id === UI.mode ? ' on' : '');
       b.textContent = m.name; // no icons in window text blocks
+      b.title = m.desc || m.name; // hover tooltip explains the game mode
       b.onclick = () => { UI.mode = m.id; actions.setMode(m.id); buildModeBtns(defs); };
       el.modeBtns.appendChild(b);
     }
@@ -157,11 +158,15 @@ export function initUI(actions) {
     for (const it of list) {
       const unlocked = prof.isUnlocked(it);
       const sel = selId === it.id;
-      // figureheads show their PICTURE (user: "i liked the pictures better");
-      // paints/flags/trails stay color tiles
+      // figureheads show their PICTURE; flags and trails show the icon ON the
+      // base color — matching the in-game assets (flag = colored cloth +
+      // design; trail = icon pixels + tinted wake). Paints stay color tiles.
       let inner = '', style = '';
       if (isPaint) { style = `background:${it.color};`; }
-      else if (kind === 'flag' || kind === 'trail') { style = it.color ? `background:${it.color};` : ''; }
+      else if (kind === 'flag' || kind === 'trail') {
+        style = it.color ? `background:${it.color};` : '';
+        inner = it.icon;
+      }
       else { inner = it.icon || (it.name || '?').charAt(0).toUpperCase(); }
       html += `<div class="cositem ${isPaint ? 'paint' : ''} ${sel ? 'sel' : ''} ${unlocked ? '' : 'locked'}"
         title="${it.name}${unlocked ? '' : ' — level ' + it.lvl}" style="${style}"
@@ -836,10 +841,14 @@ export function initUI(actions) {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyB' && !SHOP_DISABLED) el.shop.classList.toggle('hidden');
-    if (e.code === 'Tab') { e.preventDefault(); }
-    if (e.code === 'Escape') actions.togglePause();
-    if (e.code === 'KeyN' || e.code === 'KeyM') actions.spectateNext(e.code === 'KeyM' ? 1 : -1);
+    // typing in a form field must never trigger game shortcuts — Tab has to
+    // move between the login inputs (user: "Tab button is not working to
+    // logically switch between the username and password fields")
+    const typing = e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+    if (e.code === 'KeyB' && !SHOP_DISABLED && !typing) el.shop.classList.toggle('hidden');
+    if (e.code === 'Tab' && !typing) { e.preventDefault(); }
+    if (e.code === 'Escape' && !typing) actions.togglePause();
+    if ((e.code === 'KeyN' || e.code === 'KeyM') && !typing) actions.spectateNext(e.code === 'KeyM' ? 1 : -1);
   });
 
   // init cosmetics interactions happen in buildCosmetics

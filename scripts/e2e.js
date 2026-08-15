@@ -69,6 +69,12 @@ async function main() {
   // ---- LOGIN SCREEN: persistent profiles; test/test is the seeded max-level
   // profile (all styles + cosmetics unlocked) ----
   ok('login screen gates the title', await page.locator('#login').isVisible());
+  // Tab must move between the form fields (regression: the global scoreboard
+  // Tab-preventDefault ate focus moves while typing in inputs)
+  await page.locator('#loginUser').focus();
+  await page.keyboard.press('Tab');
+  const tabTarget = await page.evaluate(() => document.activeElement && document.activeElement.id);
+  ok(`Tab moves username → password (focused "${tabTarget}")`, tabTarget === 'loginPass');
   await page.locator('#loginUser').fill('test');
   await page.locator('#loginPass').fill('test');
   await page.locator('#btnLogin').click();
@@ -100,6 +106,12 @@ async function main() {
   });
   ok(`maps are distinct (cove ${mapsDiff.coveCannons} batteries/${mapsDiff.coveIsles} isles vs lagoon ${mapsDiff.lagoonCannons}/${mapsDiff.lagoonIsles})`,
     mapsDiff.coveCannons === 3 && mapsDiff.lagoonCannons === 0 && mapsDiff.coveIsles === 3 && mapsDiff.lagoonIsles === 1);
+  // ---- game-mode buttons carry hover tooltips explaining the mode ----
+  const modeTip = await page.evaluate(() => {
+    const b = document.querySelector('#modeBtns .modebtn');
+    return b ? b.title : '';
+  });
+  ok(`game mode tooltip explains the mode ("${modeTip.slice(0, 40)}…")`, modeTip.length > 15);
   // host settings panel is HOST-ONLY — the pilot (non-host) must not see it
   ok('host settings panel hidden for non-host', await page.locator('#hostPanel').evaluate(el => el.classList.contains('hidden')));
   // canoe cards are a card-shaped weapon picture + the name (no swatches/icons)
@@ -172,6 +184,11 @@ async function main() {
   // figureheads show their PICTURES (the user preferred the picture icons)
   const fhPic = (await page.locator('#cosmWrap .cositem[data-k="figurehead"]').nth(1).textContent()).trim();
   ok(`figureheads show pictures ("${fhPic}")`, fhPic.length > 0);
+  // flag + trail tiles show the DESIGN ICON over the base color (matching the
+  // in-game assets: colored flag cloth + design; icon-pixel wake stream)
+  const flagTile = (await page.locator('#cosmWrap .cositem[data-k="flag"]').nth(1).textContent()).trim();
+  const trailTile = (await page.locator('#cosmWrap .cositem[data-k="trail"]').nth(1).textContent()).trim();
+  ok(`flag tiles show the design icon ("${flagTile}"), trail tiles show the vfx icon ("${trailTile}")`, flagTile.length > 0 && trailTile.length > 0);
   // hover a paint tile → the canoe preview canvas must render (non-blank)
   await page.locator('#cosmWrap .cositem[data-k="paint"]').nth(1).hover();
   await page.waitForTimeout(700);

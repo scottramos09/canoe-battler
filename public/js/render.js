@@ -1033,52 +1033,50 @@ void main() {
     return g;
   }
 
-  // FIGUREHEADS mount on the STERN (the back, closest to the player's chase
-  // camera) — backwards on purpose so the driver sees their trophy clearly
-  // (user: "mounted on the back of the canoe (closest to the player's
-  // camera), which is backwards but fun"). Faces the camera too.
-  function figurehead(id, zPos) {
+  // FIGUREHEADS mount on the BOW (the front) — classic figurehead placement
+  // (user changed their mind: "Figureheads should appear on the front of the
+  // canoe, not the back").
+  function figurehead(id) {
     const g = new THREE.Group();
-    const at = (x, y) => { g.position.set(x, y, zPos); };
+    const at = (x, y, z) => { g.position.set(x, y, z); };
     if (id === 'skull') {
       const s = box(0.55, 0.55, 0.55, '#e8e8e8'); g.add(s);
       g.add(box(0.14, 0.14, 0.14, '#1a1a1a').translateY(0.12).translateX(-0.13).translateZ(0.28));
       g.add(box(0.14, 0.14, 0.14, '#1a1a1a').translateY(0.12).translateX(0.13).translateZ(0.28));
-      at(0, 1.0);
+      at(0, 1.0, 1.6);
     } else if (id === 'dragon') {
       g.add(box(0.6, 0.5, 1.0, '#2e8b3d').translateY(0.5).translateZ(0.4));
       g.add(box(0.2, 0.45, 0.2, '#e8d23a').translateY(1.0).translateZ(0.2).rotateX(0.4));
       g.add(box(0.5, 0.14, 0.9, '#3aa04a').translateY(0.45).translateZ(0.15).rotateX(-0.5));
-      at(0, 0.3);
+      at(0, 0.3, 1.7);
     } else if (id === 'phoenix') {
       g.add(box(0.5, 0.5, 0.8, '#e8842a').translateY(0.55).translateZ(0.3));
       g.add(box(0.14, 0.3, 0.14, '#ffcf4d').translateY(1.05).translateZ(0.2));
       g.add(box(0.8, 0.12, 0.5, '#ff6a2a').translateY(0.5).translateX(-0.45).translateZ(0.2).rotateY(0.5).rotateZ(-0.4));
       g.add(box(0.8, 0.12, 0.5, '#ff6a2a').translateY(0.5).translateX(0.45).translateZ(0.2).rotateY(-0.5).rotateZ(0.4));
-      at(0, 0.3);
+      at(0, 0.3, 1.7);
     } else if (id === 'walrus') {
       g.add(box(0.6, 0.45, 0.7, '#c2a25a').translateY(0.5).translateZ(0.3));
       g.add(box(0.12, 0.3, 0.12, '#e8e8e8').translateY(0.5).translateX(-0.2).translateZ(0.7).rotateX(0.6));
       g.add(box(0.12, 0.3, 0.12, '#e8e8e8').translateY(0.5).translateX(0.2).translateZ(0.7).rotateX(0.6));
-      at(0, 0.3);
+      at(0, 0.3, 1.7);
     } else if (id === 'shark') {
       g.add(box(0.5, 0.4, 1.1, '#5a6a7a').translateY(0.45).translateZ(0.3));
       g.add(box(0.5, 0.3, 0.5, '#6a7a8a').translateY(0.8).translateZ(0.6).rotateX(-0.7));
       g.add(box(0.3, 0.3, 0.3, '#c8302a').translateY(0.5).translateZ(0.9));
-      at(0, 0.3);
+      at(0, 0.3, 1.75);
     } else if (id === 'kraken') {
       g.add(box(0.5, 0.6, 0.5, '#7a3ad8').translateY(0.55).translateZ(0.3));
       for (let i = 0; i < 4; i++) {
         g.add(box(0.14, 0.14, 0.8, '#8a4ae8').translateY(0.9).translateZ(0.2).rotateX(0.9).rotateY(i * Math.PI / 2 + 0.4));
       }
-      at(0, 0.3);
+      at(0, 0.3, 1.7);
     } else if (id === 'capn') {
       g.add(box(0.5, 0.5, 0.5, '#e8b28a').translateY(0.55).translateZ(0.3));
       g.add(box(0.55, 0.2, 0.55, '#1a2a4a').translateY(0.9).translateZ(0.3));
       g.add(box(0.6, 0.5, 0.1, '#3a2a1a').translateY(0.55).translateZ(0.6).rotateY(0.15));
-      at(0, 0.3);
+      at(0, 0.3, 1.7);
     }
-    g.rotation.y = Math.PI; // face backward, toward the chase camera
     return g;
   }
 
@@ -1147,8 +1145,8 @@ void main() {
     const turret = new THREE.Group();
     turret.position.set(0, 0.35, L * 0.2);
     hull.add(turret);
-    // figurehead — mounted on the STERN (back), facing the chase camera
-    const fh = figurehead(cosmetics.figurehead || 'none', -(L * 0.5 + 0.4));
+    // figurehead — mounted on the BOW (front), classic placement
+    const fh = figurehead(cosmetics.figurehead || 'none');
     if (fh.children.length) hull.add(fh);
     // flag — the DESIGN lives in the texture: base color + the icon picture
     // (anchor, jolly roger, blackbeard skull, kraken…) drawn over it
@@ -2297,13 +2295,17 @@ void main() {
       wtr.rotation.x = -Math.PI / 2;
       wtr.position.y = -0.62;
       s.scene.add(wtr);
-      // wake ribbon for trail options (fading boxes behind the hull)
+      // wake-trail stream: the SAME emoji icon sprites the in-game jet stream
+      // uses (trailIconTexture), trailing the stern and fading with distance —
+      // the preview matches the in-game vfx by construction
       s.trail = new THREE.Group();
-      for (let i = 0; i < 6; i++) {
-        const box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 1.1),
-          new THREE.MeshBasicMaterial({ color: '#fff', transparent: true, opacity: 0.55 * (1 - i / 6) }));
-        box.position.set(0, -0.5, -2.4 - i * 1.05);
-        s.trail.add(box);
+      for (let i = 0; i < 12; i++) {
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: null, transparent: true, depthWrite: false }));
+        sp.position.set((Math.random() - 0.5) * 0.8, -0.48, -2.2 - i * 0.72);
+        const sc = 0.22 + Math.random() * 0.1;
+        sp.scale.set(sc, sc, 1);
+        sp.material.opacity = Math.max(0.12, 0.95 * (1 - i / 12));
+        s.trail.add(sp);
       }
       s.scene.add(s.trail);
       cosmPrevCache.set(clsDef.id, s);
@@ -2314,7 +2316,11 @@ void main() {
     const ang = ((performance.now() - s.t0) / 1000) * 0.35;
     if (s.lastSig !== sig) {
       s.lastSig = sig;
-      if (s.group) { s.scene.remove(s.group); disposeGroup(s.group); }
+      if (s.group) {
+        // detach the icon stream BEFORE disposal — it must survive the rebuild
+        if (s.trail.parent) s.trail.parent.remove(s.trail);
+        s.scene.remove(s.group); disposeGroup(s.group);
+      }
       const built = buildCanoe(clsDef, cosmetics);
       const L = 3.3 * clsDef.size;
       const turret = new THREE.Group();
@@ -2322,13 +2328,18 @@ void main() {
       turret.add(buildWeapon(clsDef.id, 'w1', 0));
       built.hull.add(turret);
       built.group.rotation.y = ang; // continue the spin, no visual jump
+      // attach the icon stream to the CANOE so it trails the stern while the
+      // hull orbits
+      built.group.add(s.trail);
       s.group = built.group;
       s.scene.add(s.group);
-      // trail color ribbon (none = no trail, in-game wake stays white)
+      // trail icons (none = no stream, in-game stays plain wake)
       const tdc = trailDef(cosmetics.trail);
-      const tc = tdc ? tdc.color : null;
-      s.trail.visible = !!tc;
-      if (tc) for (const c of s.trail.children) c.material.color.set(tc);
+      s.trail.visible = !!(tdc && tdc.icon);
+      if (tdc && tdc.icon) {
+        const tex = trailIconTexture(tdc.icon);
+        for (const c of s.trail.children) { c.material.map = tex; c.material.needsUpdate = true; }
+      }
     } else {
       s.group.rotation.y = ang;
     }

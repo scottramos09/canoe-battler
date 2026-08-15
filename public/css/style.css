@@ -528,8 +528,8 @@ tr.leader td { color: var(--gold); }
 .lobby-actions { display: flex; gap: 8px; margin-top: 14px; }
 .lobby-actions .btn { flex: 1; text-align: center; }
 
-/* ---- figureheads show their PICTURES (emoji) ---- */
-.cositem[data-k="figurehead"] { font-size: 19px; line-height: 1; }
+/* ---- figureheads/flags/trails show their ICON pictures (emoji) ---- */
+.cositem[data-k="figurehead"], .cositem[data-k="flag"], .cositem[data-k="trail"] { font-size: 19px; line-height: 1; }
 
 /* ---- LOGIN screen ---- */
 #login { background: rgba(5,8,20,.97); z-index: 90; }
